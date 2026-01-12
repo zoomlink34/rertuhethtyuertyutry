@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Buy Pixels - THE 10 MILLION PIXELS PLUS</title>
+    <style>
+        body { background: #E0E0E0; font-family: Arial; text-align: center; padding-top: 50px; }
+        .box { background: #fff; padding: 40px; display: inline-block; border: 2px solid #D4AF37; width: 400px; }
+        input { display: block; width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ccc; box-sizing: border-box; }
+        .price-info { color: #CC0000; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+        button { width: 100%; padding: 15px; background: #CC0000; color: #fff; border: none; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2 style="color:#D4AF37">ORDER PIXELS</h2>
+        <p class="price-info">Price: $1 per Pixel (Minimum Order: $10)</p>
+        
+        <input type="number" id="amount" placeholder="Enter Amount in USD (e.g. 10, 50, 1000)" min="10">
+        <input type="text" id="company" placeholder="Business/Logo Name">
+        <input type="text" id="img" placeholder="Your Logo URL">
+        <input type="text" id="site" placeholder="Your Website Link">
+        
+        <button onclick="send()">SUBMIT ORDER</button>
+        <a href="index.html" style="display:block; margin-top:15px; color:#666; text-decoration:none;">← Back to Home</a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script>
+        firebase.initializeApp({databaseURL: "https://m-legacy-5cf2b-default-rtdb.firebaseio.com/"});
+        function send(){
+            const amt = document.getElementById('amount').value;
+            if(amt < 10) return alert("Minimum order is $10 (10 Pixels)");
+            
+            firebase.database().ref('pending_orders').push({
+                usdAmount: amt,
+                pixelCount: amt, // ১ ডলার = ১ পিক্সেল হিসাব
+                companyName: document.getElementById('company').value,
+                imageUrl: document.getElementById('img').value,
+                siteUrl: document.getElementById('site').value,
+                timestamp: Date.now()
+            }).then(() => { alert("Order submitted! We will contact you for placement."); window.location.href="index.html"; });
+        }
+    </script>
+</body>
+</html>
