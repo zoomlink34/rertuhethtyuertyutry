@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel | THE 10 MILLION PIXELS PLUS</title>
+    <style>
+        body { background: #000a0a; color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        h2 { color: #D4AF37; border-bottom: 2px solid #D4AF37; padding-bottom: 10px; }
+        .request-card { 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid #D4AF37; 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .info span { display: block; font-size: 14px; margin-bottom: 5px; }
+        .amount-tag { color: #00ffcc; font-weight: bold; font-size: 18px; }
+        .approve-btn { 
+            background: #D4AF37; 
+            color: #000; 
+            border: none; 
+            padding: 12px 25px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            border-radius: 5px; 
+        }
+        .approve-btn:hover { background: #fff; }
+        .preview-img { width: 60px; height: 60px; object-fit: cover; border: 1px solid #D4AF37; margin-right: 15px; }
+    </style>
+</head>
+<body>
+
+    <h2>THE 10 MILLION PIXELS - PENDING ORDERS</h2>
+    <div id="pending-list">Loading orders...</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = { databaseURL: "https://m-legacy-5cf2b-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // পেন্ডিং অর্ডার লিস্ট রিড করা
+        db.ref('pending_orders').on('value', snapshot => {
+            const list = document.getElementById('pending-list');
+            list.innerHTML = "";
+            const data = snapshot.val();
+
+            if (!data) {
+                list.innerHTML = "<p>No new orders found.</p>";
+                return;
+            }
+
+            Object.keys(data).forEach(orderId => {
+                const item = data[orderId];
+                const div = document.createElement('div');
+                div.className = "request-card";
+                div.innerHTML = `
+                    <div style="display:flex; align-items:center;">
+                        <img src="${item.imageUrl}" class="preview-img" onerror="this.src='https://via.placeholder.com/60'">
+                        <div class="info">
+                            <span class="amount-tag">Payment: $${item.usdAmount}</span>
+                            <span><strong>Company:</strong> ${item.companyName}</span>
+                            <span><strong>Pixels Requested:</strong> ${item.pixelCount} Pixels</span>
+                            <span><strong>Website:</strong> <a href="${item.siteUrl}" target="_blank" style="color:#00ffcc">${item.siteUrl}</a></span>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="approve-btn" onclick="approveOrder('${orderId}')">CONFIRM & PLACE</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        });
+
+        // অর্ডার কনফার্ম করার ফাংশন
+        function approveOrder(orderId) {
+            db.ref('pending_orders/' + orderId).once('value', snapshot => {
+                const data = snapshot.val();
+                if (data) {
+                    // মেইন 'pixels' নোডে ডাটা মুভ করা (আপনি ম্যানুয়ালি কোঅর্ডিনেট বসাতে পারেন)
+                    db.ref('pixels/' + orderId).set(data)
+                    .then(() => {
+                        db.ref('pending_orders/' + orderId).remove();
+                        alert("Order Confirmed! Pixels are now active.");
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
